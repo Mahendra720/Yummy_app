@@ -1,18 +1,19 @@
-import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SplashScreen from '../screens/SplashScreen';
-import AuthScreen from '../screens/AuthScreen';
-import BottomTabs from './BottomTabs';
-import ProductDetails from '../screens/ProductDetails';
-import CartScreen from '../screens/CartScreen';
-import AddressScreen from '../screens/AddressScreen';
-import PaymentScreen from '../screens/PaymentScreen';
-import CheckoutScreen from '../screens/CheckoutScreen';
-import OrderComplete from '../screens/OrderComplete';
+import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+import SplashScreen from "../screens/SplashScreen";
+import AuthScreen from "../screens/AuthScreen";
+import BottomTabs from "./BottomTabs";
+import ProductDetails from "../screens/ProductDetails";
+import CartScreen from "../screens/CartScreen";
+import AddressScreen from "../screens/AddressScreen";
+import PaymentScreen from "../screens/PaymentScreen";
+import CheckoutScreen from "../screens/CheckoutScreen";
+import OrderComplete from "../screens/OrderComplete";
 
 const Stack = createNativeStackNavigator();
 
-export default function RootNavigator(){
+export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Splash" component={SplashScreen} />
