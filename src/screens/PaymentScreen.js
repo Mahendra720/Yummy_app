@@ -1,4 +1,7 @@
 import React, {useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
+
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Modal } from 'react-native';
 import ProgressSteps from '../components/ProgressSteps';
 import { useCart } from '../context/CartContext';
@@ -9,15 +12,68 @@ export default function PaymentScreen({ route, navigation }){
   const subtotal = state.items.reduce((s,i)=> s + i.price*i.qty, 0);
   const [showModal, setShowModal] = useState(false);
 
-  const complete = ()=> {
-    setShowModal(true);
-    setTimeout(()=>{
-      dispatch({type:'CLEAR'});
-      setShowModal(false);
-      navigation.replace('OrderComplete');
-    }, 1400);
-  }
 
+const complete = async () => {
+  try {
+    // get userId from AsyncStorage (or fallback)
+    const stored = await AsyncStorage.getItem('userId');
+    const userId = stored || "68cf98189cab51b4d1c202f5";
+
+    const orderData = {
+      userId,
+      items: state.items,
+      subtotal,
+      paymentMethod: method,
+      paymentStatus: method === "cod" ? "Pending" : "Paid",
+      createdAt: new Date()
+    };
+
+    // IMPORTANT: use correct host for your setup:
+    // - Android emulator -> http://10.0.2.2:5000
+    // - iOS simulator -> http://localhost:5000
+    // - Physical device -> http://<your-pc-local-ip>:5000
+    const API = "http://192.168.1.174:5000/api/payment/save"; // change if needed
+
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    // read raw text to catch HTML errors from server
+    const text = await res.text();
+    console.log('Server response (raw):', text);
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Failed to parse JSON from server:', e);
+      Alert.alert('Server error', 'Server did not return JSON. See console logs.');
+      return;
+    }
+
+    if (!res.ok) {
+      console.error('Server returned non-OK status', res.status, data);
+      Alert.alert('Error', data.error || 'Failed to save payment (server error)');
+      return;
+    }
+
+    if (data.success) {
+      setShowModal(true);
+      setTimeout(() => {
+        dispatch({ type: "CLEAR" });
+        setShowModal(false);
+        navigation.replace("OrderComplete");
+      }, 1400);
+    } else {
+      Alert.alert('Error', data.error || 'Failed to save payment');
+    }
+  } catch (err) {
+    console.log("Payment save error:", err);
+    Alert.alert('Network error', 'Could not reach server. Check network / server and try again.');
+  }
+};
   return (
     <SafeAreaView style={{flex:1, backgroundColor:'#fff'}}>
       <ProgressSteps step={2} total={3} />
